@@ -41,6 +41,8 @@
     scrollingHandler.currentScrolling = - [[UIApplication sharedApplication] statusBarFrame].size.height;
     scrollingHandler.draggingCount = 0;
     
+    NSLog(@"navbar y %f",navbar.frame.origin.y);
+    
     [scrollView addObserver:scrollingHandler forKeyPath:@"contentOffset" options:NSKeyValueObservingOptionNew context:nil];
     [scrollView addObserver:scrollingHandler forKeyPath:@"pan.state" options:NSKeyValueObservingOptionNew context:nil];
 
@@ -79,14 +81,32 @@
 - (void)scrollNavbar {
     CGFloat offsetY = self.scrollView.contentOffset.y;
     
+    if (offsetY < 0)
+        return;
+    
     if ([self isExpanding]) {
-        [self expandNavbar];
-        [self expandScrollViewTopConstraint];
+        CGFloat statusBarHeight = [[UIApplication sharedApplication] statusBarFrame].size.height;
+        if (self.currentScrolling > -statusBarHeight) {
+            self.currentScrolling -= self.deltaScrolling;
+            
+            self.currentScrolling = (self.currentScrolling < -statusBarHeight) ? -statusBarHeight : self.currentScrolling;
+
+            [self expandNavbar];
+            [self expandScrollViewTopConstraint];
+        }
     }
     
     if ([self isCollapsing]) {
-        [self collapseNavbar];
-        [self collapseScrollViewTopConstraint];
+        if (self.scrollingLimit > self.currentScrolling) {
+            self.currentScrolling += self.deltaScrolling;
+            
+            self.currentScrolling = (self.currentScrolling > self.scrollingLimit) ? self.scrollingLimit : self.currentScrolling;
+            
+            
+        
+            [self collapseNavbar];
+            [self collapseScrollViewTopConstraint];
+        }
     }
     
     self.previousOffset = offsetY;
@@ -98,18 +118,11 @@
 }
 
 - (void)expandNavbar {
-    CGFloat statusBarHeight = [[UIApplication sharedApplication] statusBarFrame].size.height;
-    if (self.currentScrolling > -statusBarHeight) {
-        self.currentScrolling -= self.deltaScrolling;
-        
-        self.currentScrolling = (self.currentScrolling < -statusBarHeight) ? -statusBarHeight : self.currentScrolling;
-        
-        [self updateCurrentScrollingNavbarFrame];
-    }
+    [self updateCurrentScrollingNavbarFrame];
 }
 
 - (void)expandScrollViewTopConstraint {
-    
+    self.scrollViewTopConstraint.constant = - (self.currentScrolling + [[UIApplication sharedApplication] statusBarFrame].size.height);
 }
 
 #pragma mark - Collapse
@@ -118,14 +131,14 @@
 }
 
 - (void)collapseNavbar {
-    if (self.scrollingLimit > self.currentScrolling) {
-        self.currentScrolling += self.deltaScrolling;
-     
-        self.currentScrolling = (self.currentScrolling > self.scrollingLimit) ? self.scrollingLimit : self.currentScrolling;
-        [self updateCurrentScrollingNavbarFrame];
-    }
+    [self updateCurrentScrollingNavbarFrame];
 }
 
+- (void)collapseScrollViewTopConstraint {
+    self.scrollViewTopConstraint.constant = - (self.currentScrolling + [[UIApplication sharedApplication] statusBarFrame].size.height);
+}
+
+#pragma mark - Update
 - (void)updateCurrentScrollingNavbarFrame {
     CGFloat navbarX = self.navbar.frame.origin.x;
     CGFloat navbarY = - self.currentScrolling;
@@ -133,10 +146,6 @@
     CGFloat navbarHeight = CGRectGetHeight(self.navbar.frame);
     
     self.navbar.frame = CGRectMake(navbarX, navbarY, navbarWidth, navbarHeight);
-}
-
-- (void)collapseScrollViewTopConstraint {
-    
 }
 
 #pragma mark - Autoscroll
@@ -164,6 +173,7 @@
 #pragma mark - Memory
 - (void)dealloc {
     [self.scrollView removeObserver:self forKeyPath:@"contentOffset"];
+    [self.scrollView removeObserver:self forKeyPath:@"pan.state"];
 }
 
 @end
