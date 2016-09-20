@@ -1,0 +1,11 @@
+use_frameworks!
+
+target 'MLScrollingNavbar_Example' do
+  pod 'MLScrollingNavbar', :path => '../'
+
+  target 'MLScrollingNavbar_Tests' do
+    inherit! :search_paths
+
+    
+  end
+end
