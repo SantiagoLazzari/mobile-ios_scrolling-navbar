@@ -1,0 +1,6 @@
+framework module MLScrollingNavbar {
+  umbrella header "MLScrollingNavbar-umbrella.h"
+
+  export *
+  module * { export * }
+}

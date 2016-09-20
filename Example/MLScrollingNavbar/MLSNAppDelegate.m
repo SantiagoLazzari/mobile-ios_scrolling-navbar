@@ -8,11 +8,27 @@
 
 #import "MLSNAppDelegate.h"
 
+#import "MLSNScrollingHandler.h"
+#import "MLSNMainViewController.h"
+
 @implementation MLSNAppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-    // Override point for customization after application launch.
+    
+    MLSNMainViewController *viewController = [MLSNMainViewController new];
+    
+    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleLightContent];
+    
+    UINavigationController *navController = [[UINavigationController alloc] initWithRootViewController:viewController];
+    [navController.navigationBar setTranslucent:NO];
+    navController.view.backgroundColor = [UIColor greenColor];
+    
+    [self.window setRootViewController:navController];
+    
+    [self.window makeKeyAndVisible];
+    
     return YES;
 }
 
