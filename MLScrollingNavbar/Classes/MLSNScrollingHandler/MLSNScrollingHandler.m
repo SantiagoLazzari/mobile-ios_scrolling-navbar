@@ -15,8 +15,13 @@
 @property (nonatomic) UIScrollView *scrollView;
 @property (nonatomic) CGFloat previousOffset;
 
+// El límite de cuánto tiene que scrollear el navbar
 @property (nonatomic) CGFloat scrollingLimit;
+
+// Es la propiedad que dice cuando se movió de su estado original
 @property (nonatomic) CGFloat currentScrolling;
+
+// La diferencia de scrolling que tuvo
 @property (nonatomic) CGFloat deltaScrolling;
 
 @end
@@ -29,6 +34,7 @@
     scrollingHandler.scrollViewTopConstraint = scrollViewTopConstraint;
     scrollingHandler.navbar = navbar;
     scrollingHandler.scrollView = scrollView;
+    scrollingHandler.currentScrolling = - [[UIApplication sharedApplication] statusBarFrame].size.height;
     
     [scrollView addObserver:scrollingHandler forKeyPath:@"contentOffset" options:NSKeyValueObservingOptionNew context:nil];
     
@@ -79,25 +85,13 @@
 }
 
 - (void)expandNavbar {
-    if (self.currentScrolling > 0) {
+    CGFloat statusBarHeight = [[UIApplication sharedApplication] statusBarFrame].size.height;
+    if (self.currentScrolling > -statusBarHeight) {
         self.currentScrolling -= self.deltaScrolling;
         
+        self.currentScrolling = (self.currentScrolling < -statusBarHeight) ? -statusBarHeight : self.currentScrolling;
         
-        CGFloat navbarX = self.navbar.frame.origin.x;
-        CGFloat navbarY = self.navbar.frame.origin.y + self.deltaScrolling;
-        CGFloat navbarWidth = CGRectGetWidth(self.navbar.frame);
-        CGFloat navbarHeight = CGRectGetHeight(self.navbar.frame);
-        
-        self.navbar.frame = CGRectMake(navbarX, navbarY, navbarWidth, navbarHeight);
-    } else {
-        CGFloat statusBarHeight = [[UIApplication sharedApplication]statusBarFrame].size.height;
-        
-        CGFloat navbarX = self.navbar.frame.origin.x;
-        CGFloat navbarY = statusBarHeight;
-        CGFloat navbarWidth = CGRectGetWidth(self.navbar.frame);
-        CGFloat navbarHeight = CGRectGetHeight(self.navbar.frame);
-        
-        self.navbar.frame = CGRectMake(navbarX, navbarY, navbarWidth, navbarHeight);
+        [self updateCurrentScrollingNavbarFrame];
     }
 }
 
@@ -113,22 +107,20 @@
 - (void)collapseNavbar {
     if (self.scrollingLimit > self.currentScrolling) {
         self.currentScrolling += self.deltaScrolling;
-        
-        
-        CGFloat navbarX = self.navbar.frame.origin.x;
-        CGFloat navbarY = self.navbar.frame.origin.y - self.deltaScrolling;
-        CGFloat navbarWidth = CGRectGetWidth(self.navbar.frame);
-        CGFloat navbarHeight = CGRectGetHeight(self.navbar.frame);
-        
-        self.navbar.frame = CGRectMake(navbarX, navbarY, navbarWidth, navbarHeight);
-    } else {
-        CGFloat navbarX = self.navbar.frame.origin.x;
-        CGFloat navbarY = - self.scrollingLimit;
-        CGFloat navbarWidth = CGRectGetWidth(self.navbar.frame);
-        CGFloat navbarHeight = CGRectGetHeight(self.navbar.frame);
-        
-        self.navbar.frame = CGRectMake(navbarX, navbarY, navbarWidth, navbarHeight);
+     
+        self.currentScrolling = (self.currentScrolling > self.scrollingLimit) ? self.scrollingLimit : self.currentScrolling;
+        [self updateCurrentScrollingNavbarFrame];
     }
+}
+
+- (void)updateCurrentScrollingNavbarFrame {
+    CGFloat navbarX = self.navbar.frame.origin.x;
+    CGFloat navbarY = - self.currentScrolling;
+    CGFloat navbarWidth = CGRectGetWidth(self.navbar.frame);
+    CGFloat navbarHeight = CGRectGetHeight(self.navbar.frame);
+    
+    self.navbar.frame = CGRectMake(navbarX, navbarY, navbarWidth, navbarHeight);
+
 }
 
 - (void)collapseScrollViewTopConstraint {
