@@ -69,6 +69,7 @@
     if ([keyPath isEqualToString:@"pan.state"]) {
         self.draggingCount += (self.scrollView.dragging) ? 1 : -1;
         
+        // FIX: Esto es muy cabeza, averiguar si se puede hacer mejor :( (me baso en los eventos y la verdad es que no se si puede fallar o no (cambiar !))
         if (self.draggingCount == 1) {
             self.draggingCount = 0;
         
@@ -101,8 +102,6 @@
             self.currentScrolling += self.deltaScrolling;
             
             self.currentScrolling = (self.currentScrolling > self.scrollingLimit) ? self.scrollingLimit : self.currentScrolling;
-            
-            
         
             [self collapseNavbar];
             [self collapseScrollViewTopConstraint];
