@@ -1,0 +1,16 @@
+PODS:
+  - MLScrollingNavbar (0.1.0)
+
+DEPENDENCIES:
+  - MLScrollingNavbar (from `../`)
+
+EXTERNAL SOURCES:
+  MLScrollingNavbar:
+    :path: ../
+
+SPEC CHECKSUMS:
+  MLScrollingNavbar: 151893bdf846bc042b6916d28df72a2e5f416883
+
+PODFILE CHECKSUM: 0724d4cf29534d3ddfc7c8018147750bc55eb6e1
+
+COCOAPODS: 1.0.1

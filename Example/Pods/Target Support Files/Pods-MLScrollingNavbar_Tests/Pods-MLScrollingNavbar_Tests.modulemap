@@ -1,0 +1,6 @@
+framework module Pods_MLScrollingNavbar_Tests {
+  umbrella header "Pods-MLScrollingNavbar_Tests-umbrella.h"
+
+  export *
+  module * { export * }
+}
