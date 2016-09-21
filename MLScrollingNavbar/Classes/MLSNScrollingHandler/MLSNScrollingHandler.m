@@ -40,7 +40,6 @@
     scrollingHandler.scrollView = scrollView;
     scrollingHandler.currentScrolling = - [[UIApplication sharedApplication] statusBarFrame].size.height;
     scrollingHandler.draggingCount = 0;
-        
     [scrollView addObserver:scrollingHandler forKeyPath:@"contentOffset" options:NSKeyValueObservingOptionNew context:nil];
     [scrollView addObserver:scrollingHandler forKeyPath:@"pan.state" options:NSKeyValueObservingOptionNew context:nil];
 

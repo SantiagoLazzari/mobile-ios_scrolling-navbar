@@ -50,7 +50,11 @@
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+<<<<<<< HEAD
     return 20;
+=======
+    return 200;
+>>>>>>> d266a34cff0efa047f89a9134f883979ac9182b5
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -65,4 +69,12 @@
     return cell;
 }
 
+<<<<<<< HEAD
+=======
+//#pragma mark - ScrollView
+//- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+//    [self.scrollingHandler scrollNavbarWithScrollView:self.tableView];
+//}
+
+>>>>>>> d266a34cff0efa047f89a9134f883979ac9182b5
 @end
