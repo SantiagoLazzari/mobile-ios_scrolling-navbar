@@ -124,7 +124,7 @@
         self.currentScrolling = self.currentScrolling > -statusBarHeight ? self.currentScrolling : - statusBarHeight;
             
         [self expandNavbar];
-        [self expandScrollViewTopConstraint];
+        [self layoutScrollViewTopConstraint];
 
         [self layoutAuxView];
         
@@ -137,7 +137,7 @@
             
             
             [self collapseNavbar];
-            [self collapseScrollViewTopConstraint];
+            [self layoutScrollViewTopConstraint];
             
             [self layoutAuxView];
 
@@ -166,9 +166,6 @@
     [self updateCurrentScrollingNavbarFrame];
 }
 
-- (void)expandScrollViewTopConstraint {
-    self.scrollViewTopConstraint.constant = - (self.currentScrolling + [[UIApplication sharedApplication] statusBarFrame].size.height);
-}
 
 #pragma mark - Collapse
 - (BOOL)isCollapsing {
@@ -177,10 +174,6 @@
 
 - (void)collapseNavbar {
     [self updateCurrentScrollingNavbarFrame];
-}
-
-- (void)collapseScrollViewTopConstraint {
-    self.scrollViewTopConstraint.constant = - (self.currentScrolling + [[UIApplication sharedApplication] statusBarFrame].size.height);
 }
 
 #pragma mark - Update
@@ -192,6 +185,15 @@
     
     self.navbar.frame = CGRectMake(navbarX, navbarY, navbarWidth, navbarHeight);
 }
+
+- (void)layoutScrollViewTopConstraint {
+    CGFloat constantTopConstraint = - (self.currentScrolling + [[UIApplication sharedApplication] statusBarFrame].size.height);
+    
+    constantTopConstraint = constantTopConstraint + self.navbar.frame.size.height > 0 ? constantTopConstraint : - self.navbar.frame.size.height;
+    
+    self.scrollViewTopConstraint.constant = constantTopConstraint;
+}
+
 
 #pragma mark - Autoscroll
 - (BOOL)mightCollide {
