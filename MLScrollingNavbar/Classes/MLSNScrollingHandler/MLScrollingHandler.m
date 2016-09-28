@@ -6,14 +6,14 @@
 //
 //
 
-#import "MLSNScrollingHandler.h"
+#import "MLScrollingHandler.h"
 
-@interface MLSNScrollingHandler ()
+@interface MLScrollingHandler ()
 
 // Necessary properties for scrolling handler to work
-@property (nonatomic) NSLayoutConstraint *scrollViewTopConstraint;
-@property (nonatomic) UIView *navbar;
-@property (nonatomic) UIScrollView *scrollView;
+@property (weak, nonatomic) NSLayoutConstraint *scrollViewTopConstraint;
+@property (weak, nonatomic) UIView *navbar;
+@property (weak, nonatomic) UIScrollView *scrollView;
 
 // An iteration previous offset (necesary to calculating the delta offeste)
 @property (nonatomic) CGFloat previousOffset;
@@ -31,15 +31,15 @@
 @property (nonatomic) NSUInteger draggingCount;
 
 // Status bar auxiliar view
-@property (nonatomic) UIView *auxView;
+@property (strong, nonatomic) UIView *auxView;
 
 @end
 
-@implementation MLSNScrollingHandler
+@implementation MLScrollingHandler
 
 #pragma mark - Init
 + (instancetype)scrollingHandlerWithScrollViewTopConstraint:(NSLayoutConstraint *)scrollViewTopConstraint navbar:(UIView *)navbar scrollView:(UIScrollView *)scrollView statusBarBackgroundColor:(UIColor *)color {
-    MLSNScrollingHandler *scrollingHandler = [[MLSNScrollingHandler alloc] initWithScrollViewTopConstraint:scrollViewTopConstraint navbar:navbar scrollView:scrollView statusBarBackgroundColor:color];
+    MLScrollingHandler *scrollingHandler = [[MLScrollingHandler alloc] initWithScrollViewTopConstraint:scrollViewTopConstraint navbar:navbar scrollView:scrollView statusBarBackgroundColor:color];
     [scrollView addObserver:scrollingHandler forKeyPath:@"contentOffset" options:NSKeyValueObservingOptionNew context:nil];
     [scrollView addObserver:scrollingHandler forKeyPath:@"pan.state" options:NSKeyValueObservingOptionNew context:nil];
     
@@ -53,12 +53,12 @@
 }
 
 - (instancetype)initWithScrollViewTopConstraint:(NSLayoutConstraint *)scrollViewTopConstraint navbar:(UIView *)navbar scrollView:(UIScrollView *)scrollView statusBarBackgroundColor:(UIColor *)color {
-    if (self = [[MLSNScrollingHandler alloc] init]) {
+    if (self = [[MLScrollingHandler alloc] init]) {
         self.scrollViewTopConstraint = scrollViewTopConstraint;
         self.navbar = navbar;
         self.scrollView = scrollView;
         
-        self.currentScrolling = - [[UIApplication sharedApplication] statusBarFrame].size.height;
+        self.currentScrolling = - CGRectGetHeight([[UIApplication sharedApplication] statusBarFrame]);
         self.draggingCount = 0;
         
         [self setupNavbarWithAuxViewWithColor:color];
@@ -72,18 +72,19 @@
     CGFloat auxViewX = 0;
     CGFloat auxViewY = - self.navbar.frame.origin.y;
     CGFloat auxViewWidth = CGRectGetWidth(self.navbar.frame);
-    CGFloat auxViewHeight = [[UIApplication sharedApplication] statusBarFrame].size.height;
+    CGFloat auxViewHeight = CGRectGetHeight([[UIApplication sharedApplication] statusBarFrame]);
     
     self.auxView = [[UIView alloc] initWithFrame:CGRectMake(auxViewX, auxViewY, auxViewWidth, auxViewHeight)];
     self.auxView.backgroundColor = color;
     
     [self.navbar addSubview:self.auxView];
-    [self.navbar sendSubviewToBack:self.auxView];
+    
+    [self.navbar bringSubviewToFront:self.auxView];
 }
 
 #pragma mark - Getters
 - (CGFloat)scrollingLimit {
-    return self.navbar.frame.size.height + [[UIApplication sharedApplication] statusBarFrame].size.height;
+    return CGRectGetHeight(self.navbar.frame) + CGRectGetHeight([[UIApplication sharedApplication] statusBarFrame]);
 }
 
 - (CGFloat)deltaScrolling {
@@ -101,10 +102,10 @@
     if ([keyPath isEqualToString:@"pan.state"]) {
         self.draggingCount += (self.scrollView.dragging) ? 1 : -1;
         
-        // FIX: Esto es muy cabeza, averiguar si se puede hacer mejor :( (me baso en los eventos y la verdad es que no se si puede fallar o no (cambiar !)), anda pero depende de que apple no haga nada extraño
+        // FIX: View for alternative solutions
         if (self.draggingCount == 1) {
             self.draggingCount = 0;
-            
+        
             [self autoScroll];
         }
     }
@@ -120,15 +121,15 @@
     
     if (offsetY > (contentHeight - CGRectGetHeight(self.scrollView.frame)))
         return;
-    
+
     if ([self isExpanding]) {
-        CGFloat statusBarHeight = [[UIApplication sharedApplication] statusBarFrame].size.height;
+        CGFloat statusBarHeight = CGRectGetHeight([[UIApplication sharedApplication] statusBarFrame]);
         self.currentScrolling -= self.deltaScrolling;
         self.currentScrolling = self.currentScrolling > -statusBarHeight ? self.currentScrolling : - statusBarHeight;
-        
+            
         [self expandNavbar];
         [self layoutScrollViewTopConstraint];
-        
+
         [self layoutAuxView];
         
     }
@@ -143,7 +144,7 @@
             [self layoutScrollViewTopConstraint];
             
             [self layoutAuxView];
-            
+
         }
     }
     
@@ -154,10 +155,10 @@
     CGFloat auxViewX = 0;
     CGFloat auxViewY = - self.navbar.frame.origin.y;
     CGFloat auxViewWidth = CGRectGetWidth(self.navbar.frame);
-    CGFloat auxViewHeight = [[UIApplication sharedApplication] statusBarFrame].size.height;
+    CGFloat auxViewHeight = CGRectGetHeight([[UIApplication sharedApplication] statusBarFrame]);
     
     self.auxView.frame = CGRectMake(auxViewX, auxViewY, auxViewWidth, auxViewHeight);
-    
+
 }
 
 #pragma mark - Expand
@@ -170,7 +171,7 @@
 }
 
 - (void)expandAnimated:(BOOL)animated {
-    CGPoint finalPoint = CGPointMake(self.scrollView.contentOffset.x, self.scrollView.contentOffset.y - (self.currentScrolling + [[UIApplication sharedApplication] statusBarFrame].size.height));
+    CGPoint finalPoint = CGPointMake(self.scrollView.contentOffset.x, self.scrollView.contentOffset.y - (self.currentScrolling + CGRectGetHeight([[UIApplication sharedApplication] statusBarFrame])));
     
     [self.scrollView setContentOffset:finalPoint animated:animated];
 }
@@ -201,9 +202,9 @@
 }
 
 - (void)layoutScrollViewTopConstraint {
-    CGFloat constantTopConstraint = - (self.currentScrolling + [[UIApplication sharedApplication] statusBarFrame].size.height);
+    CGFloat constantTopConstraint = - (self.currentScrolling + CGRectGetHeight([[UIApplication sharedApplication] statusBarFrame]));
     
-    constantTopConstraint = constantTopConstraint + self.navbar.frame.size.height > 0 ? constantTopConstraint : - self.navbar.frame.size.height;
+    constantTopConstraint = constantTopConstraint + CGRectGetHeight(self.navbar.frame) > 0 ? constantTopConstraint : - CGRectGetHeight(self.navbar.frame);
     
     self.scrollViewTopConstraint.constant = constantTopConstraint;
 }
@@ -211,11 +212,11 @@
 
 #pragma mark - Autoscroll
 - (BOOL)mightCollapse {
-    return self.currentScrolling + [[UIApplication sharedApplication] statusBarFrame].size.height >= self.scrollingLimit / 2.0;
+    return self.currentScrolling + CGRectGetHeight([[UIApplication sharedApplication] statusBarFrame]) >= self.scrollingLimit / 2.0;
 }
 
 - (BOOL)mightExpand {
-    return self.currentScrolling + [[UIApplication sharedApplication] statusBarFrame].size.height < self.scrollingLimit / 2.0;
+    return self.currentScrolling + CGRectGetHeight([[UIApplication sharedApplication] statusBarFrame]) < self.scrollingLimit / 2.0;
 }
 
 - (void)autoScroll {
@@ -230,6 +231,7 @@
 - (void)dealloc {
     [self.scrollView removeObserver:self forKeyPath:@"contentOffset"];
     [self.scrollView removeObserver:self forKeyPath:@"pan.state"];
+    [self.auxView removeFromSuperview];
 }
 
 @end
